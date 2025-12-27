@@ -4,40 +4,46 @@ from vk_api.utils import get_random_id
 import requests
 
 # === Настройки ===
-TOKEN = 'ваш_токен_сообщества'  # ← Замените
+GROUP_TOKEN = 'vk1.a.2jfndisxUXlFAahsvPCSgOYJTmSQq0ZFYIXJH7bf6Cu_Dwk45RT82mNnNt0ZALy-zX1Sax1qODRfDF6X7Tt8M6s4l8n1WMC_izn7obvvhWM5u2gm4o7AP2GuLANsuuTqHZVhIcZe--Tm7balhFfsAatGdkWA06Y9XY5U4tbHpKCwmX_QscBXsAyIy6Iif7TlO86KSY29oBseYtL_AK5UOQ'
+USER_TOKEN = 'vk1.a.ArzKHFa6CW1MkCEPYMiXAB9VbG9hVOZ5pQupQqAIeo4aB2pMJh4miagVy_KkVCWmLxXZy-WQzmApBbVxPNcAmkX7BFHf-27KIoykohLRONm9yyVX4kLLwHLHfrLqyNizRkSps4Irc58T00xW0rMR-0pFZ6IFhyGwmGjPSCVOXBvmuRQAYx02S4gHHjTp38PEezkHQlc14OZv4s-Yhd41WQ'
 
-# Авторизация бота
-vk_session = vk_api.VkApi(token=TOKEN)
-vk = vk_session.get_api()
-longpoll = VkLongPoll(vk_session)
+# Сессия для бота (группа)
+group_session = vk_api.VkApi(token=GROUP_TOKEN)
+vk = group_session.get_api()
+longpoll = VkLongPoll(group_session)
 
-# Хранилище состояний пользователей (в реальном проекте — БД)
-user_states = {}  # {user_id: {'step': 'wait_age', 'data': {}}}
+# Сессия для поиска (пользователь)
+search_session = vk_api.VkApi(token=USER_TOKEN)
+search_api = search_session.get_api()
+
+# Хранилище состояний
+user_states = {}
 
 
 # === Функция поиска пользователей ===
-def search_users(age, sex, city_id, offset=0):
+def search_users(age_from, age_to, sex, city_id, offset=0):
     try:
-        response = vk.users.search(
-            age_from=age,
-            age_to=age,
-            sex=sex,           # 1 — женщина, 2 — мужчина
+        response = search_api.users.search(
+            age_from=age_from,
+            age_to=age_to,
+            sex=sex,
             city=city_id,
             has_photo=1,
             count=10,
             offset=offset,
-            fields='photo_id, about, bdate'
+            fields='bdate,city,sex,photo_id',
+            v='5.131'
         )
         return response['items']
     except Exception as e:
-        print(f"Ошибка поиска: {e}")
+        print(f"❌ Ошибка поиска: {e}")
         return []
 
 
 # === Получение топ-3 фото по лайкам ===
 def get_top_photos(user_id):
     try:
-        photos = vk.photos.get(
+        photos = search_api.photos.get(
             owner_id=user_id,
             album_id='profile',
             extended=1,
@@ -45,27 +51,65 @@ def get_top_photos(user_id):
         )
         photo_likes = []
         for photo in photos['items']:
+            # Берём максимальное по размеру изображение
             photo_url = max(photo['sizes'], key=lambda x: x['width'])['url']
             likes = photo['likes']['count']
-            photo_likes.append((photo_url, likes))
+            photo_id = photo['id']
+            photo_likes.append((photo_url, likes, photo_id))
 
-        # Сортируем по лайкам, берём топ-3
+        # Сортируем по лайкам
         top_photos = sorted(photo_likes, key=lambda x: x[1], reverse=True)[:3]
-        return top_photos  # [(url, likes), ...]
+        return top_photos
     except Exception as e:
         print(f"Ошибка фото: {e}")
         return []
 
 
-# === Получение ID города ===
+# === Получение ID города — с access_token ===
 def get_city_id(city_title):
+    url = "https://api.vk.com/method/database.getCities"
+    params = {
+        'country_id': 1,
+        'q': city_title,
+        'count': 10,
+        'v': '5.131',
+        'access_token': USER_TOKEN  # ← Добавлен токен
+    }
     try:
-        response = vk.database.getCities(country_id=1, q=city_title, count=1)
-        if response['items']:
-            return response['items'][0]['id']
-        else:
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if 'response' not in data:
+            error_msg = data.get('error', {}).get('error_msg', 'Unknown error')
+            print(f"❌ Ошибка API: {error_msg}")
             return None
-    except:
+
+        items = data['response']['items']
+        if not items:
+            print(f"⚠️ Город '{city_title}' не найден.")
+            return None
+
+        print(f"🔍 Найдены города: {[c['title'] for c in items]}")
+
+        # Точное совпадение
+        for city in items:
+            if city['title'].lower().strip() == city_title.lower().strip():
+                print(f"✅ Точное совпадение: {city['title']} → id={city['id']}")
+                return city['id']
+
+        # Частичное совпадение
+        for city in items:
+            if city_title.lower().strip() in city['title'].lower():
+                print(f"✅ Частичное совпадение: '{city_title}' в '{city['title']}' → id={city['id']}")
+                return city['id']
+
+        # Возвращаем первый
+        city = items[0]
+        print(f"🟡 Не найдено, возвращаем первый: {city['title']} → id={city['id']}")
+        return city['id']
+
+    except Exception as e:
+        print(f"❌ Ошибка при поиске города: {e}")
         return None
 
 
@@ -97,7 +141,10 @@ for event in longpoll.listen():
         # Получаем пол
         if user_id in user_states and user_states[user_id]['step'] == 'wait_sex':
             if text in ('1', '2'):
-                user_states[user_id]['data']['sex'] = int(text)
+                # Сохраняем, КЕМ ищем (противоположный пол)
+                user_sex = int(text)
+                search_sex = 1 if user_sex == 2 else 2  # 1=жен, 2=муж → ищем пару
+                user_states[user_id]['data']['sex'] = search_sex
                 user_states[user_id]['step'] = 'wait_city'
                 message = "Введи город (например: Москва)."
             else:
@@ -110,33 +157,37 @@ for event in longpoll.listen():
             city_id = get_city_id(text)
             if city_id:
                 data = user_states[user_id]['data']
+                age = data['age']
+                sex = data['sex']
                 data['city_id'] = city_id
 
-                # Поиск
-                candidates = search_users(data['age'], data['sex'], data['city_id'])
+                # ✅ Расширяем возраст в диапазон
+                age_from = max(16, age - 5)
+                age_to = age + 5
+
+                # ✅ Передаём правильные аргументы
+                candidates = search_users(age_from, age_to, sex, city_id)
+
                 if not candidates:
-                    message = "Кандидаты не найдены."
+                    message = "Кандидаты не найдены. Попробуйте другой возраст или город."
                     vk.messages.send(user_id=user_id, random_id=get_random_id(), message=message)
                 else:
-                    for person in candidates[:3]:  # Покажем первых 3
+                    for person in candidates[:3]:
                         name = f"{person['first_name']} {person['last_name']}"
                         link = f"vk.com/id{person['id']}"
                         photos = get_top_photos(person['id'])
                         message = f"👤 {name}\n📍 {link}\n"
                         if photos:
-                            message += "ТОП-3 фото по лайкам:\n"
-                            for i, (url, likes) in enumerate(photos, 1):
-                                message += f"{i}. Лайков: {likes}\n"
-                            # Отправляем фото
+                            attachments = ",".join([f"photo{person['id']}_{p[2]}" for p in photos])  # p[2] = photo_id
                             vk.messages.send(
                                 user_id=user_id,
                                 random_id=get_random_id(),
                                 message=message,
-                                attachment=",".join([f"photo{person['id']}_{photo['id']}" for photo in photos])
+                                attachment=attachments
                             )
+
                         else:
                             vk.messages.send(user_id=user_id, random_id=get_random_id(), message=message)
-                # Завершаем
                 user_states.pop(user_id)
             else:
                 message = "Город не найден. Попробуйте ещё раз."
