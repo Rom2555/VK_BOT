@@ -73,10 +73,11 @@ class UserBot:
     def __init__(self, vk_api, searcher):
         self.vk = vk_api
         self.searcher = searcher
-
+#####################################################################################################################
         # Словарь для хранения состояния пользователя
-        self.user_states = {}
 
+        self.user_states = {}
+####################################################################################################################
 
     def send_message(self, user_id, message, attachment=None):
         self.vk.messages.send(
@@ -99,7 +100,7 @@ class UserBot:
         if user_id not in self.user_states:
             return
 
-        state = self.user_states[user_id]
+        state = self.user_states[user_id]     ########################################################################
         print(self.user_states)
 
         match state['step']:
@@ -127,7 +128,7 @@ class UserBot:
                 else:
                     data = state['data']
                     age = data['age']
-                    age_from, age_to = max(16, age - 5), age + 5
+                    age_from, age_to = max(16, age - 5), age + 5  # защита от слишком маленького возраста (12)
                     candidates = self.searcher.search_users(age_from, age_to, data['sex'], city_id)
 
                     if not candidates:
@@ -141,7 +142,7 @@ class UserBot:
                             attachment = ",".join(photos) if photos else None
                             self.send_message(user_id, message, attachment)
 
-                    # Завершаем сессию
+                    # Завершаем сессию, очищая словарь состояния
                     self.user_states.pop(user_id)
 
             case _:
