@@ -31,7 +31,7 @@ class VkSearcher:
                     return city['id']
             return items[0]['id']
         except Exception as e:
-            print(f"❌ Ошибка поиска города: {e}")
+            print(f"Ошибка поиска города: {e}")
             return None
 
     def search_users(self, age_from, age_to, sex, city_id, offset=0):
@@ -49,7 +49,7 @@ class VkSearcher:
             )
             return response['items']
         except Exception as e:
-            print(f"❌ Ошибка поиска пользователей: {e}")
+            print(f"Ошибка поиска пользователей: {e}")
             return []
 
     def get_top_photos(self, user_id):
@@ -63,7 +63,7 @@ class VkSearcher:
             top = sorted(photos['items'], key=lambda p: p['likes']['count'], reverse=True)
             return [f"photo{user_id}_{p['id']}" for p in top[:3]]
         except Exception as e:
-            print(f"❌ Ошибка получения фото: {e}")
+            print(f"Ошибка получения фото: {e}")
             return []
 
 
@@ -73,7 +73,10 @@ class UserBot:
     def __init__(self, vk_api, searcher):
         self.vk = vk_api
         self.searcher = searcher
+
+        # Словарь для хранения состояния пользователя
         self.user_states = {}
+
 
     def send_message(self, user_id, message, attachment=None):
         self.vk.messages.send(
@@ -84,9 +87,11 @@ class UserBot:
         )
 
     def handle_message(self, user_id, text):
+        """Обработка входящего сообщения."""
+
         text = text.strip().lower()
 
-        if text in ('/start', 'начать', 'найти пару'):
+        if text in ('/start'):
             self.user_states[user_id] = {'step': 'wait_age'}
             self.send_message(user_id, "Привет! Введи желаемый возраст (например: 25).")
             return
@@ -95,6 +100,7 @@ class UserBot:
             return
 
         state = self.user_states[user_id]
+        print(self.user_states)
 
         match state['step']:
             case 'wait_age':
@@ -125,12 +131,12 @@ class UserBot:
                     candidates = self.searcher.search_users(age_from, age_to, data['sex'], city_id)
 
                     if not candidates:
-                        self.send_message(user_id, "😔 К сожалению, кандидаты не найдены.")
+                        self.send_message(user_id, "К сожалению, кандидаты не найдены.")
                     else:
                         for person in candidates[:3]:
                             name = f"{person['first_name']} {person['last_name']}"
                             link = f"vk.com/id{person['id']}"
-                            message = f"👤 {name}\n🔗 {link}"
+                            message = f"Имя: {name}\nСсылка: {link}"
                             photos = self.searcher.get_top_photos(person['id'])
                             attachment = ",".join(photos) if photos else None
                             self.send_message(user_id, message, attachment)
@@ -139,7 +145,7 @@ class UserBot:
                     self.user_states.pop(user_id)
 
             case _:
-                self.send_message(user_id, "❌ Произошла ошибка. Напишите /start.")
+                self.send_message(user_id, "Произошла ошибка. Напишите /start.")
                 self.user_states.pop(user_id, None)
 
 
@@ -156,11 +162,13 @@ if __name__ == '__main__':
     vk = group_session.get_api()
     longpoll = VkLongPoll(group_session)
 
+    # Инициализация поиска и бота
     searcher = VkSearcher(USER_TOKEN)
     bot = UserBot(vk, searcher)
 
-    print("✅ Бот запущен и слушает сообщения...")
+    print("Бот запущен и слушает сообщения...")
 
+    # Основной цикл
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
             bot.handle_message(event.user_id, event.text)
