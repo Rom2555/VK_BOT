@@ -4,8 +4,8 @@ from vk_api.utils import get_random_id
 import requests
 
 # === Настройки ===
-GROUP_TOKEN = 'vk1.a.2jfndisxUXlFAahsvPCSgOYJTmSQq0ZFYIXJH7bf6Cu_Dwk45RT82mNnNt0ZALy-zX1Sax1qODRfDF6X7Tt8M6s4l8n1WMC_izn7obvvhWM5u2gm4o7AP2GuLANsuuTqHZVhIcZe--Tm7balhFfsAatGdkWA06Y9XY5U4tbHpKCwmX_QscBXsAyIy6Iif7TlO86KSY29oBseYtL_AK5UOQ'
-USER_TOKEN = 'vk1.a.ArzKHFa6CW1MkCEPYMiXAB9VbG9hVOZ5pQupQqAIeo4aB2pMJh4miagVy_KkVCWmLxXZy-WQzmApBbVxPNcAmkX7BFHf-27KIoykohLRONm9yyVX4kLLwHLHfrLqyNizRkSps4Irc58T00xW0rMR-0pFZ6IFhyGwmGjPSCVOXBvmuRQAYx02S4gHHjTp38PEezkHQlc14OZv4s-Yhd41WQ'
+GROUP_TOKEN = 'vk1.a.7mT7FcZo3tAVhobcX0tKvfrcj9Q6UyqslStJ5ncKMXQSc7MrhZNdZMfMcXSHq6Ghf51Y7jbgZTCGVuJC2Cm_uM069-eo2JAp0rVlLwDepporeNbMlYzWtaCBDZUOGEtkUS-dY3ifycot5QQTFXZQMxXAQwOZx-khOczY35XT_Qhp4Polm3UWN8n8CxvrwJKTFBvESMT4taqbZsg15Rqxdg'
+USER_TOKEN = 'vk1.a.mqSeaCYSCq-lXgBXBOxqiGfRhYalT06P-erce9eiYwcuy2jCLbR9C8lMommk4w12dmIDvRBlS6KpZ2UoXhvI5mSysoCW8v0stOjLbwgr_XLhcJod3g6tAson6QDvxm13SKOrQlrCcCIWRDchVGSVlLBLCwyK79N-1vz-1FdQu9l9yVYKIEEpCfwjEQDL7NOShmaVtOe0WpSHCnKS-EIcBA'
 
 # Сессия для бота (группа)
 group_session = vk_api.VkApi(token=GROUP_TOKEN)
@@ -32,7 +32,7 @@ def search_users(age_from, age_to, sex, city_id, offset=0):
             count=10,
             offset=offset,
             fields='bdate,city,sex,photo_id',
-            v='5.131'
+            v='5.199'
         )
         return response['items']
     except Exception as e:
@@ -132,7 +132,7 @@ for event in longpoll.listen():
             if text.isdigit() and 14 <= int(text) <= 90:
                 user_states[user_id]['data'] = {'age': int(text)}
                 user_states[user_id]['step'] = 'wait_sex'
-                message = "Выбери пол: 1 — женщина, 2 — мужчина."
+                message = "Выбери пол: 1 - мужчина, 2 - женщина."
             else:
                 message = "Введите возраст числом (от 14 до 90)."
             vk.messages.send(user_id=user_id, random_id=get_random_id(), message=message)
@@ -143,7 +143,7 @@ for event in longpoll.listen():
             if text in ('1', '2'):
                 # Сохраняем, КЕМ ищем (противоположный пол)
                 user_sex = int(text)
-                search_sex = 1 if user_sex == 2 else 2  # 1=жен, 2=муж → ищем пару
+                search_sex = 1 if user_sex == 2 else 2  # 1=муж, 2=жен → ищем пару
                 user_states[user_id]['data']['sex'] = search_sex
                 user_states[user_id]['step'] = 'wait_city'
                 message = "Введи город (например: Москва)."
