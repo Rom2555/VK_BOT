@@ -142,6 +142,8 @@ class UserBot:
                             attachment = ",".join(photos) if photos else None
                             self.send_message(user_id, message, attachment)
 
+################################### Наверное здесь должна быть запись результатов в БД ###########################
+
                     # Завершаем сессию, очищая словарь состояния
                     self.user_states.pop(user_id)
 
