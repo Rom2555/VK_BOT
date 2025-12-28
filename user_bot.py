@@ -1,5 +1,7 @@
 from vk_api.utils import get_random_id
 
+from keyboard import get_sex_keyboard, get_next_button, get_start_button
+
 
 class UserBot:
     """Класс, управляющий состоянием и диалогом с пользователем."""
@@ -7,18 +9,18 @@ class UserBot:
     def __init__(self, vk_api, searcher):
         self.vk = vk_api
         self.searcher = searcher
-        self.user_states = {}  # Хранение состояния пользователей
+        self.user_states = {}
 
-    def send_message(self, user_id, message, attachment=None):
+    def send_message(self, user_id, message, attachment=None, keyboard=None):
         self.vk.messages.send(
             user_id=user_id,
             random_id=get_random_id(),
             message=message,
-            attachment=attachment
+            attachment=attachment,
+            keyboard=keyboard
         )
 
     def handle_message(self, user_id, text):
-        """Обработка входящего сообщения."""
         text = text.strip().lower()
 
         if text == '/start':
@@ -30,50 +32,78 @@ class UserBot:
             return
 
         state = self.user_states[user_id]
+        step = state['step']
 
-        match state['step']:
-            case 'wait_age':
-                if text.isdigit() and 14 <= int(text) <= 90:
-                    state['data'] = {'age': int(text)}
-                    state['step'] = 'wait_sex'
-                    self.send_message(user_id, "Выбери пол для поиска:\n1 — мужчина\n2 — женщина")
-                else:
-                    self.send_message(user_id, "Введите возраст числом (от 14 до 90).")
+        if step == 'wait_age':
+            if text.isdigit() and 14 <= int(text) <= 90:
+                state['age'] = int(text)
+                state['step'] = 'wait_sex'
+                self.send_message(
+                    user_id,
+                    "Выбери пол для поиска:\n1 — мужчина\n2 — женщина",
+                    keyboard=get_sex_keyboard()
+                )
+            else:
+                self.send_message(user_id, "Введите возраст числом (от 14 до 90).")
 
-            case 'wait_sex':
-                if text in ('1', '2'):
-                    search_sex = 2 if text == '1' else 1
-                    state['data']['sex'] = search_sex
-                    state['step'] = 'wait_city'
-                    self.send_message(user_id, "Введите город (например: Санкт-Петербург).")
-                else:
-                    self.send_message(user_id, "Введите 1 или 2.")
+        elif step == 'wait_sex':
+            if text in ('1', '2'):
+                state['sex'] = 2 if text == '1' else 1
+                state['step'] = 'wait_city'
+                self.send_message(user_id, "Введите город (например: Санкт-Петербург).")
+            else:
+                self.send_message(user_id, "Выберите пол с помощью кнопок.", keyboard=get_sex_keyboard())
 
-            case 'wait_city':
-                city_title = text
-                city_id = self.searcher.get_city_id(city_title)
-                if not city_id:
-                    self.send_message(user_id, "Город не найден. Попробуйте ещё раз.")
-                else:
-                    data = state['data']
-                    age = data['age']
-                    age_from, age_to = max(16, age - 5), age + 5
-                    candidates = self.searcher.search_users(age_from, age_to, data['sex'], city_id)
+        elif step == 'wait_city':
+            city_title = text
+            city_id = self.searcher.get_city_id(city_title)
+            if not city_id:
+                self.send_message(user_id, "Город не найден. Попробуйте ещё раз.")
+            else:
+                age = state['age']
+                age_from, age_to = max(16, age - 5), age + 5
+                sex = state['sex']
 
-                    if not candidates:
-                        self.send_message(user_id, "К сожалению, кандидаты не найдены.")
-                    else:
-                        for person in candidates[:3]:
-                            name = f"{person['first_name']} {person['last_name']}"
-                            link = f"vk.com/id{person['id']}"
-                            message = f"Имя: {name}\nСсылка: {link}"
-                            photos = self.searcher.get_top_photos(person['id'])
-                            attachment = ",".join(photos) if photos else None
-                            self.send_message(user_id, message, attachment)
+                candidates = self.searcher.search_users(age_from, age_to, sex, city_id)
 
-                    # Завершаем диалог
+                if not candidates:
+                    self.send_message(user_id, "Кандидаты не найдены.")
                     self.user_states.pop(user_id)
+                else:
+                    state['step'] = 'showing'
+                    state['candidates'] = candidates
+                    state['index'] = 0
+                    self.send_next_candidate(user_id)
 
-            case _:
-                self.send_message(user_id, "Произошла ошибка. Напишите /start.")
-                self.user_states.pop(user_id, None)
+        elif step == 'showing' and text == 'дальше':
+            self.send_next_candidate(user_id)
+
+    def send_next_candidate(self, user_id):
+        state = self.user_states[user_id]
+        idx = state['index']
+        candidates = state['candidates']
+
+        if idx >= len(candidates):
+            self.send_message(
+                user_id,
+                "Кандидаты закончились. Хочешь начать сначала?",
+                keyboard=get_start_button()
+            )
+            return
+
+        person = candidates[idx]
+        name = f"{person['first_name']} {person['last_name']}"
+        link = f"vk.com/id{person['id']}"
+        message = f"Имя: {name}\nСсылка: {link}"
+
+        photos = self.searcher.get_top_photos(person['id'])
+        attachment = ",".join(photos) if photos else None
+
+        self.send_message(
+            user_id,
+            message,
+            attachment=attachment,
+            keyboard=get_next_button()
+        )
+
+        state['index'] += 1
