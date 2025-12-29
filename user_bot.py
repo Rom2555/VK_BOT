@@ -30,7 +30,7 @@ class UserBot:
         )
 
         # Всегда обрабатываем /start
-        if text == "/start" or text == "начать заново":
+        if text == "/start" or text == "новый поиск":
             self.user_states[user_id] = {"step": "wait_age"}
             self.send_message(user_id, "Привет! Введи желаемый возраст (например: 25).")
             return
