@@ -8,8 +8,9 @@ def get_sex_keyboard():
     keyboard.add_button("2", color=VkKeyboardColor.NEGATIVE)
     return keyboard.get_keyboard()
 
+
 def get_action_buttons():
-    """Клавиатура с 4 кнопками: Дальше, Добавить в избранное, Избранное, Начать заново"""
+    """Клавиатура с 4 кнопками: Дальше, Доб. в избранное, Избранное, Начать заново"""
     keyboard = VkKeyboard(one_time=False)
 
     # Первая строка
@@ -21,6 +22,7 @@ def get_action_buttons():
     keyboard.add_button("Начать заново", color=VkKeyboardColor.NEGATIVE)
 
     return keyboard.get_keyboard()
+
 
 def get_next_button():
     """Кнопка 'Дальше'"""

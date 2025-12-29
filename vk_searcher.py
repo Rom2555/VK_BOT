@@ -11,18 +11,18 @@ class VkSearcher:
     def get_city_id(self, city_title):
         try:
             response = self.api.database.getCities(country_id=1, q=city_title, count=10)
-            items = response['items']
+            items = response["items"]
             if not items:
                 return None
             # Точное совпадение
             for city in items:
-                if city['title'].lower().strip() == city_title.lower().strip():
-                    return city['id']
+                if city["title"].lower().strip() == city_title.lower().strip():
+                    return city["id"]
             # Частичное
             for city in items:
-                if city_title.lower().strip() in city['title'].lower():
-                    return city['id']
-            return items[0]['id']
+                if city_title.lower().strip() in city["title"].lower():
+                    return city["id"]
+            return items[0]["id"]
         except Exception as e:
             print(f"Ошибка поиска города: {e}")
             return None
@@ -37,13 +37,15 @@ class VkSearcher:
                 has_photo=1,
                 count=10,
                 offset=offset,
-                fields='bdate,city,sex,is_closed,can_access_closed',
-                v='5.199'
+                fields="bdate,city,sex,is_closed,can_access_closed",
+                v="5.199",
             )
             # Фильтрация: пропускаем пользователей, к которым нет доступа
             users = []
-            for person in response['items']:
-                if person.get('is_closed', False) and not person.get('can_access_closed', False):
+            for person in response["items"]:
+                if person.get("is_closed", False) and not person.get(
+                    "can_access_closed", False
+                ):
                     continue  # пропустить приватного пользователя
                 users.append(person)
             return users
@@ -54,12 +56,13 @@ class VkSearcher:
     def get_top_photos(self, user_id):
         try:
             photos = self.api.photos.get(
-                owner_id=user_id,
-                album_id='profile',
-                extended=1,
-                count=30
+                owner_id=user_id, album_id="profile", extended=1, count=30
             )
-            top = sorted(photos['items'], key=lambda p: p['likes']['count'] + p['comments']['count'], reverse=True)
+            top = sorted(
+                photos["items"],
+                key=lambda p: p["likes"]["count"] + p["comments"]["count"],
+                reverse=True,
+            )
             return [f"photo{user_id}_{p['id']}" for p in top[:3]]
         except Exception as e:
             print(f"Ошибка получения фото: {e}")

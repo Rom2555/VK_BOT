@@ -1,11 +1,12 @@
-import time
 import logging
+import time
+
 from vk_api import VkApi, VkApiError
-from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api.longpoll import VkEventType, VkLongPoll
 
 from config import GROUP_TOKEN, USER_TOKEN
-from vk_searcher import VkSearcher
 from user_bot import UserBot
+from vk_searcher import VkSearcher
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
