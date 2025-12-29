@@ -84,10 +84,9 @@ class UserBot:
             if text == 'дальше':
                 self.send_next_candidate(user_id)
             elif text == 'добавить в избранное':
-                self.send_message(user_id,
-                                  "Пока только заглушка: пользователь добавлен в избранное (будет работать с БД).")
+                self.send_message(user_id,"Пока заглушка для БД.")
             elif text == 'избранное':
-                self.send_message(user_id, "Пока пусто. Сохраняйте людей через 'Добавить в избранное'.")
+                self.send_message(user_id,"Пока заглушка для БД.")
 
     def send_next_candidate(self, user_id):
         state = self.user_states.get(user_id)
