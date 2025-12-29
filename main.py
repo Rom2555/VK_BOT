@@ -1,28 +1,39 @@
-from vk_api import VkApi
+import time
+import logging
+from vk_api import VkApi, VkApiError
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 from config import GROUP_TOKEN, USER_TOKEN
 from vk_searcher import VkSearcher
 from user_bot import UserBot
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
 
 def main():
-    # Инициализация API группы
-    group_session = VkApi(token=GROUP_TOKEN)
-    vk = group_session.get_api()
-    longpoll = VkLongPoll(group_session)
+    while True:
+        try:
+            group_session = VkApi(token=GROUP_TOKEN)
+            group_session.get_api().users.get(user_ids=1)  # Проверка токена
+            vk = group_session.get_api()
+            longpoll = VkLongPoll(group_session)
 
-    # Инициализация компонентов
-    searcher = VkSearcher(USER_TOKEN)
-    bot = UserBot(vk, searcher)
+            searcher = VkSearcher(USER_TOKEN)
+            bot = UserBot(vk, searcher)
 
-    print("Бот запущен и слушает сообщения...")
+            logging.info("Бот запущен и слушает сообщения...")
 
-    # Основной цикл
-    for event in longpoll.listen():
-        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            bot.handle_message(event.user_id, event.text)
+            for event in longpoll.listen():
+                if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.text:
+                    bot.handle_message(event.user_id, event.text.strip())
+
+        except VkApiError as e:
+            logging.error(f"Ошибка API ВКонтакте: {e}")
+        except Exception as e:
+            logging.error(f"Неожиданная ошибка: {e}")
+        finally:
+            time.sleep(5)  # Пауза перед перезапуском
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
