@@ -2,7 +2,7 @@ import logging
 
 from vk_api.utils import get_random_id
 
-from keyboard import get_sex_keyboard, get_next_button, get_start_button, get_action_buttons
+from keyboard import get_sex_keyboard, get_action_buttons
 
 
 class UserBot:
@@ -84,10 +84,10 @@ class UserBot:
             if text == 'дальше':
                 self.send_next_candidate(user_id)
             elif text == 'добавить в избранное':
-                self.send_message(user_id,"Пока только заглушка: пользователь добавлен в избранное (будет работать с БД).")
+                self.send_message(user_id,
+                                  "Пока только заглушка: пользователь добавлен в избранное (будет работать с БД).")
             elif text == 'избранное':
                 self.send_message(user_id, "Пока пусто. Сохраняйте людей через 'Добавить в избранное'.")
-
 
     def send_next_candidate(self, user_id):
         state = self.user_states.get(user_id)
