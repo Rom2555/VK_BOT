@@ -1,6 +1,8 @@
+import logging
+
 from vk_api.utils import get_random_id
 
-from keyboard import get_sex_keyboard, get_next_button, get_start_button
+from keyboard import get_sex_keyboard, get_next_button, get_start_button, get_action_buttons
 
 
 class UserBot:
@@ -22,13 +24,16 @@ class UserBot:
 
     def handle_message(self, user_id, text):
         text = text.strip().lower()
+        logging.info(f"Пользователь {user_id}: '{text}' | Состояние: {self.user_states.get(user_id)}")
 
-        if text == '/start':
+        # Всегда обрабатываем /start
+        if text == '/start' or text == 'начать заново':
             self.user_states[user_id] = {'step': 'wait_age'}
             self.send_message(user_id, "Привет! Введи желаемый возраст (например: 25).")
             return
 
         if user_id not in self.user_states:
+            self.send_message(user_id, "Напишите /start, чтобы начать.")
             return
 
         state = self.user_states[user_id]
@@ -75,19 +80,29 @@ class UserBot:
                     state['index'] = 0
                     self.send_next_candidate(user_id)
 
-        elif step == 'showing' and text == 'дальше':
-            self.send_next_candidate(user_id)
+        elif step == 'showing':
+            if text == 'дальше':
+                self.send_next_candidate(user_id)
+            elif text == 'добавить в избранное':
+                self.send_message(user_id,"Пока только заглушка: пользователь добавлен в избранное (будет работать с БД).")
+            elif text == 'избранное':
+                self.send_message(user_id, "Пока пусто. Сохраняйте людей через 'Добавить в избранное'.")
+
 
     def send_next_candidate(self, user_id):
-        state = self.user_states[user_id]
+        state = self.user_states.get(user_id)
+        if not state or 'candidates' not in state:
+            self.send_message(user_id, "Ошибка. Начните с /start.", keyboard=get_action_buttons())
+            return
+
         idx = state['index']
         candidates = state['candidates']
 
         if idx >= len(candidates):
             self.send_message(
                 user_id,
-                "Кандидаты закончились. Хочешь начать сначала?",
-                keyboard=get_start_button()
+                "Кандидаты закончились. Что дальше?",
+                keyboard=get_action_buttons()  # теперь кнопки всегда активны
             )
             return
 
@@ -103,7 +118,7 @@ class UserBot:
             user_id,
             message,
             attachment=attachment,
-            keyboard=get_next_button()
+            keyboard=get_action_buttons()  # ← новая клавиатура
         )
 
         state['index'] += 1
