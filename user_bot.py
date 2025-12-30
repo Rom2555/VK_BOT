@@ -110,7 +110,7 @@ class UserBot:
             self.send_message(
                 user_id,
                 "Кандидаты закончились. Что дальше?",
-                keyboard=get_action_buttons(),  # теперь кнопки всегда активны
+                keyboard=get_action_buttons(),
             )
             return
 
@@ -126,7 +126,7 @@ class UserBot:
             user_id,
             message,
             attachment=attachment,
-            keyboard=get_action_buttons(),  # ← новая клавиатура
+            keyboard=get_action_buttons(),  # новая клавиатура
         )
 
         state["index"] += 1
