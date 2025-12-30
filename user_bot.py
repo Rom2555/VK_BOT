@@ -24,10 +24,10 @@ class UserBot:
 
     def handle_message(self, user_id, text):
         text = text.strip().lower()
-        logging.info(
-            f"Пользователь {user_id}: '{text}' |"
-            f" Состояние: {self.user_states.get(user_id)}"
-        )
+        # logging.info(
+        #     f"Пользователь {user_id}: '{text}' |"
+        #     f" Состояние: {self.user_states.get(user_id)}"
+        # )
 
         # Всегда обрабатываем /start
         if text == "/start" or text == "новый поиск":
