@@ -35,7 +35,7 @@ class VkSearcher:
                 sex=sex,
                 city_id=city_id,
                 has_photo=1,
-                count=10,
+                count=100,
                 offset=offset,
                 fields="bdate,city,sex,is_closed,can_access_closed",
                 v="5.199",
