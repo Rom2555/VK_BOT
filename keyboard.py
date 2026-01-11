@@ -36,7 +36,3 @@ def get_start_button():
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("/start", color=VkKeyboardColor.SECONDARY)
     return keyboard.get_keyboard()
-
-
-
-# СВЕТА ВИДИЩ ИЗМЕНЕНИЯ??????
