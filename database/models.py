@@ -1,14 +1,10 @@
-import json
 from datetime import datetime
-from typing import List, Dict, Any, Optional
-
 from sqlalchemy import (
-    create_engine, Column, Integer, String, DateTime,
+    Column, Integer, String, DateTime,
     ForeignKey, Text, UniqueConstraint, func
 )
 from sqlalchemy.orm import relationship, declarative_base
 
-# Базовый класс для всех моделей
 Base = declarative_base()
 
 
@@ -18,8 +14,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     vk_id = Column(Integer, unique=True, nullable=False)
-    state = Column(Text)
-    created = Column(DateTime, default=datetime.now())
+    state = Column(Text)  # JSON: {"step": "wait_age", "age": 25}
+    created = Column(DateTime, default=func.now())  # ← исправлено
     favorites = relationship('Favorite', back_populates='user')
 
 
@@ -32,7 +28,7 @@ class Candidate(Base):
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
     profile_url = Column(String(200), nullable=False)
-    photos = Column(Text, nullable=False)
+    photos = Column(Text, nullable=False)  # JSON-массив: ["photo1", "photo2", ...]
     created = Column(DateTime, default=func.now())
     favorites = relationship('Favorite', back_populates='candidate')
 
@@ -42,11 +38,9 @@ class Favorite(Base):
     __tablename__ = 'favorites'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    candidate_id = Column(Integer, ForeignKey('candidates.id'), nullable=False)
-    added = Column(DateTime, default=func.now())
-
-    user = relationship('User', back_populates='favorites')
-    candidate = relationship('Candidate', back_populates='favorites')
+    user_id = Column(Integer, ForeignKey('users.id'))
+    candidate_id = Column(Integer, ForeignKey('candidates.id'))
+    user = relationship('User', backref='favorites')
+    candidate = relationship('Candidate', backref='favorites')
 
     __table_args__ = (UniqueConstraint('user_id', 'candidate_id'),)
