@@ -11,7 +11,6 @@ from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
 # Базовый класс для всех моделей
 Base = declarative_base()
 
-
 class User(Base):
     """Пользователь бота (тот, кто ищет знакомства)."""
 
@@ -32,7 +31,6 @@ class User(Base):
     # Связь с избранными кандидатами (один пользователь - много избранных)
     favorites = relationship('Favorite', back_populates='user')
 
-
 class Candidate(Base):
     """Кандидат для знакомства (кого нашли)."""
 
@@ -48,7 +46,7 @@ class Candidate(Base):
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
 
-    # Ссылка на профиль ВК (например: vk.com/id12345)
+    # Ссылка на профиль ВК (например:  vk.com/id12345)
     profile_url = Column(String(200), nullable=False)
 
     # JSON-строка с фотографиями для attachment (список строк "photo123_456")
@@ -59,7 +57,6 @@ class Candidate(Base):
 
     # Связь с избранными (один кандидат может быть у многих пользователей)
     favorites = relationship('Favorite', back_populates='candidate')
-
 
 class Favorite(Base):
     """Связь пользователь-кандидат (многие-ко-многим)."""
@@ -85,16 +82,13 @@ class Favorite(Base):
     # Один кандидат может быть в избранном у пользователя только один раз
     __table_args__ = (UniqueConstraint('user_id', 'candidate_id'),)
 
-
 class Database:
     """Основной класс для работы с базой данных."""
 
     def __init__(self, db_url: str = 'sqlite:///bot.db'):
         """
         Инициализация подключения к БД.
-
-        Args:
-            db_url: Строка подключения SQLAlchemy
+        Args: db_url: Строка подключения SQLAlchemy
         """
         # Создаем движок для работы с базой данных
         self.engine = create_engine(db_url)
@@ -119,7 +113,6 @@ class Database:
     def get_or_create_user(self, vk_id: int) -> User:
         """
         Получает существующего пользователя или создает нового.
-
         Используется, когда нужно гарантированно иметь пользователя в БД.
         """
         # Пытаемся найти пользователя
@@ -137,7 +130,6 @@ class Database:
     def save_user_state(self, vk_id: int, state: dict):
         """
         Сохраняет состояние сессии пользователя.
-
         Args:
             vk_id: ID пользователя ВКонтакте
             state: Словарь с состоянием бота (шаги, данные поиска и т.д.)
@@ -152,7 +144,6 @@ class Database:
     def load_user_state(self, vk_id: int) -> Optional[dict]:
         """
         Загружает состояние сессии пользователя.
-
         Returns:
             Словарь с состоянием или None, если пользователь не найден
         """
@@ -173,7 +164,6 @@ class Database:
                          profile_url: str, photos: List[str]) -> Candidate:
         """
         Создает нового кандидата.
-
         Args:
             vk_id: ID кандидата в ВКонтакте
             first_name: Имя кандидата
@@ -198,7 +188,6 @@ class Database:
                                 profile_url: str, photos: List[str]) -> Candidate:
         """
         Получает существующего кандидата или создает нового.
-
         Используется при добавлении в избранное, чтобы избежать дублирования.
         """
         # Пытаемся найти кандидата
@@ -219,7 +208,6 @@ class Database:
                      photos: List[str]) -> bool:
         """
         Добавляет кандидата в избранное пользователя.
-
         Args:
             user_vk_id: ID пользователя бота в ВК
             candidate_vk_id: ID кандидата в ВК
@@ -227,7 +215,6 @@ class Database:
             last_name: Фамилия кандидата
             profile_url: Ссылка на профиль кандидата
             photos: Список фотографий кандидата
-
         Returns:
             True если кандидат добавлен, False если уже был в избранном
         """
@@ -238,7 +225,6 @@ class Database:
         candidate = self.get_or_create_candidate(
             candidate_vk_id, first_name, last_name, profile_url, photos
         )
-
         # Проверяем, не добавлен ли кандидат уже в избранное
         if self.is_favorite(user_vk_id, candidate_vk_id):
             return False
@@ -253,9 +239,7 @@ class Database:
     def remove_favorite(self, user_vk_id: int, candidate_vk_id: int) -> bool:
         """
         Удаляет кандидата из избранного пользователя.
-
-        Returns:
-            True если удалено, False если не было в избранном
+        Returns: True если удалено, False если не было в избранном
         """
         with self.Session() as session:
             # Ищем связь пользователь-кандидат
@@ -275,9 +259,7 @@ class Database:
     def get_favorites(self, user_vk_id: int) -> List[Dict[str, Any]]:
         """
         Возвращает список избранных кандидатов пользователя.
-
-        Returns:
-            Список словарей с информацией о кандидатах
+        Returns: Список словарей с информацией о кандидатах
         """
         with self.Session() as session:
             # Получаем все записи избранного для пользователя
@@ -303,9 +285,7 @@ class Database:
     def is_favorite(self, user_vk_id: int, candidate_vk_id: int) -> bool:
         """
         Проверяет, есть ли кандидат в избранном у пользователя.
-
-        Returns:
-            True если кандидат в избранном, иначе False
+        Returns: True если кандидат в избранном, иначе False
         """
         with self.Session() as session:
             # Считаем количество записей с такой связью
@@ -317,21 +297,16 @@ class Database:
             # Если count > 0, значит связь существует
             return count > 0
 
-
 # Глобальная переменная для хранения экземпляра базы данных
 _db_instance = None
-
 
 def get_database(db_url: str = 'sqlite:///bot.db') -> Database:
     """
     Возвращает экземпляр базы данных.
-
     Паттерн синглтон: создает базу только при первом вызове,
     последующие вызовы возвращают тот же экземпляр.
-
     Args:
         db_url: Строка подключения к БД
-
     Returns:
         Экземпляр класса Database
     """
