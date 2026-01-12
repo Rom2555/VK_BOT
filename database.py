@@ -26,7 +26,7 @@ class User(Base):
     state = Column(Text)
 
     # Дата создания записи
-    created = Column(DateTime, default=func.now())
+    created = Column(DateTime, default=datetime.now())
 
     # Связь с избранными кандидатами (один пользователь - много избранных)
     favorites = relationship('Favorite', back_populates='user')
