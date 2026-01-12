@@ -1,20 +1,20 @@
 import logging
 import time
 
-from database.manager import DatabaseManager
-from config import DATABASE_URL
-
 from vk_api import VkApi, VkApiError
 from vk_api.longpoll import VkEventType, VkLongPoll
 
-from config import GROUP_TOKEN, USER_TOKEN
+from config import GROUP_TOKEN, USER_TOKEN, DATABASE_URL
 from user_bot import UserBot
 from vk_searcher import VkSearcher
+from database.manager import DatabaseManager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
 def main():
+    db = DatabaseManager(DATABASE_URL)  # Инициализируем БД до цикла
+
     while True:
         try:
             group_session = VkApi(token=GROUP_TOKEN)
@@ -23,8 +23,7 @@ def main():
             longpoll = VkLongPoll(group_session)
 
             searcher = VkSearcher(USER_TOKEN)
-            db = DatabaseManager(DATABASE_URL)
-            bot = UserBot(vk, searcher, db)
+            bot = UserBot(vk, searcher, db)  # Передаём один и тот же экземпляр db
 
             logging.info("Бот запущен и слушает сообщения...")
 
