@@ -1,2 +1,5 @@
-vk-api==11.10.0
-python-dotenv==1.2.1
+vk-api==11.9.11
+python-dotenv==1.0.1
+SQLAlchemy==2.0.30
+psycopg==3.3.2
+psycopg[binary]==3.3.2
