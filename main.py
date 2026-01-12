@@ -1,6 +1,9 @@
 import logging
 import time
 
+from database.manager import DatabaseManager
+from config import DATABASE_URL
+
 from vk_api import VkApi, VkApiError
 from vk_api.longpoll import VkEventType, VkLongPoll
 
@@ -20,7 +23,8 @@ def main():
             longpoll = VkLongPoll(group_session)
 
             searcher = VkSearcher(USER_TOKEN)
-            bot = UserBot(vk, searcher)
+            db = DatabaseManager(DATABASE_URL)
+            bot = UserBot(vk, searcher, db)
 
             logging.info("Бот запущен и слушает сообщения...")
 

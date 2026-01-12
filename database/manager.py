@@ -7,7 +7,6 @@ from database.models import Base, User, Candidate, Favorite
 
 
 class DatabaseManager:
-    """Простой менеджер БД для бота — только нужное"""
 
     def __init__(self, db_url: str):
         from sqlalchemy import create_engine
