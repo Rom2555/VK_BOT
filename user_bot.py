@@ -169,20 +169,20 @@ class UserBot:
         )
 
         if success:
-            self.send_message(user_id, "✅ Кандидат добавлен в избранное!")
+            self.send_message(user_id, "Кандидат добавлен в избранное!")
         else:
-            self.send_message(user_id, "❗ Этот кандидат уже в избранном.")
+            self.send_message(user_id, "Этот кандидат уже в избранном.")
 
     def show_favorites(self, user_id):
         favorites = self.db.get_favorites(user_vk_id=user_id)
         if not favorites:
-            self.send_message(user_id, "❤️ Ваш список избранного пуст.")
+            self.send_message(user_id, "Ваш список избранного пуст.")
             return
 
         for fav in favorites:
             name = f"{fav['first_name']} {fav['last_name']}"
             link = fav['profile_url']
-            message = f"❤️ {name}\nСсылка: {link}"
+            message = f"{name}\nСсылка: {link}"
             attachment = ",".join(fav['photos']) if fav['photos'] else None
 
             self.send_message(user_id, message, attachment=attachment)
