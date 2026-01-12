@@ -38,7 +38,7 @@ class Candidate(Base):
 
 
 class Favorite(Base):
-    """Связь пользователь-кандидат (многие-ко-многим)."""
+    """Избранное. Связь пользователь-кандидат (многие-ко-многим)."""
     __tablename__ = 'favorites'
 
     id = Column(Integer, primary_key=True)
