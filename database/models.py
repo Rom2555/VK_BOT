@@ -1,8 +1,6 @@
-from sqlalchemy import (
-    Column, Integer, String, DateTime,
-    ForeignKey, Text, UniqueConstraint, func
-)
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, Text,
+                        UniqueConstraint, func)
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -15,6 +13,7 @@ class User(Base):
     vk_id = Column(Integer, unique=True, nullable=False)
     state = Column(Text)
     created = Column(DateTime, default=func.now())
+    # Связь
     favorites = relationship('Favorite', back_populates='user')
 
 
@@ -29,6 +28,7 @@ class Candidate(Base):
     profile_url = Column(String(200), nullable=False)
     photos = Column(Text, nullable=False)
     created = Column(DateTime, default=func.now())
+    # Связь
     favorites = relationship('Favorite', back_populates='candidate')
 
 
@@ -40,7 +40,7 @@ class Favorite(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     candidate_id = Column(Integer, ForeignKey('candidates.id'), nullable=False)
     added = Column(DateTime, default=func.now())
-
+    # Связь
     user = relationship('User', back_populates='favorites')
     candidate = relationship('Candidate', back_populates='favorites')
 
