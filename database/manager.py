@@ -7,12 +7,16 @@ from database.models import Base, Candidate, Favorite, User
 
 
 class DatabaseManager:
+    """Менеджер для работы с базой данных бота."""
+
     def __init__(self, db_url):
+        """Инициализация подключения к БД."""
         self.engine = create_engine(db_url)
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
 
     def get_or_create_user(self, vk_id):
+        """Получает или создаёт пользователя по VK ID."""
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=vk_id).first()
             if not user:
@@ -23,6 +27,7 @@ class DatabaseManager:
             return user
 
     def save_user_state(self, vk_id, state):
+        """Сохраняет состояние диалога пользователя."""
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=vk_id).first()
             if user:
@@ -30,6 +35,7 @@ class DatabaseManager:
                 session.commit()
 
     def load_user_state(self, vk_id):
+        """Загружает состояние диалога пользователя."""
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=vk_id).first()
             if user and user.state:
@@ -37,6 +43,7 @@ class DatabaseManager:
             return None
 
     def get_or_create_candidate(self, vk_id, first_name, last_name, profile_url, photos):
+        """Получает или создаёт кандидата по VK ID."""
         with self.Session() as session:
             candidate = session.query(Candidate).filter_by(vk_id=vk_id).first()
             if not candidate:
@@ -53,6 +60,7 @@ class DatabaseManager:
             return candidate
 
     def add_to_favorites(self, user_vk_id, candidate_vk_id, first_name, last_name, profile_url, photos):
+        """Добавляет кандидата в избранное пользователя."""
         user = self.get_or_create_user(user_vk_id)
         candidate = self.get_or_create_candidate(
             candidate_vk_id, first_name, last_name, profile_url, photos
@@ -71,6 +79,7 @@ class DatabaseManager:
             return True
 
     def get_favorites(self, user_vk_id):
+        """Возвращает список избранных кандидатов пользователя."""
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=user_vk_id).first()
             if not user:

@@ -5,10 +5,12 @@ class VkSearcher:
     """Класс для поиска пользователей, городов и фото через VK API."""
 
     def __init__(self, token):
+        """Инициализирует API с токеном пользователя."""
         self.session = VkApi(token=token)
         self.api = self.session.get_api()
 
     def get_city_id(self, city_title):
+        """Возвращает ID города по названию (точное или частичное совпадение)."""
         try:
             response = self.api.database.getCities(country_id=1, q=city_title, count=10)
             items = response["items"]
@@ -28,6 +30,7 @@ class VkSearcher:
             return None
 
     def search_users(self, age_from, age_to, sex, city_id, offset=0):
+        """Ищет пользователей по возрасту, полу и городу, возвращает открытые профили."""
         try:
             response = self.api.users.search(
                 age_from=age_from,
@@ -54,6 +57,7 @@ class VkSearcher:
             return []
 
     def get_top_photos(self, user_id):
+        """Возвращает топ-3 фото профиля по лайкам и комментариям."""
         try:
             photos = self.api.photos.get(
                 owner_id=user_id, album_id="profile", extended=1, count=30

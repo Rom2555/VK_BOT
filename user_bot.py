@@ -4,14 +4,16 @@ from keyboard import get_action_buttons, get_sex_keyboard
 
 
 class UserBot:
-    """Класс, управляющий состоянием и диалогом с пользователем."""
+    """Управляет диалогом с пользователем через VK API."""
 
     def __init__(self, vk_api, searcher, db):
+        """Инициализирует бота с API, поисковиком и БД."""
         self.vk = vk_api
         self.searcher = searcher
         self.db = db
 
     def send_message(self, user_id, message, attachment=None, keyboard=None):
+        """Отправляет сообщение пользователю."""
         self.vk.messages.send(
             user_id=user_id,
             random_id=get_random_id(),
@@ -21,6 +23,7 @@ class UserBot:
         )
 
     def handle_message(self, user_id, text):
+        """Обрабатывает входящее сообщение от пользователя."""
         text = text.strip().lower()
 
         # Всегда обрабатываем /start
@@ -109,6 +112,7 @@ class UserBot:
                 self.show_favorites(user_id)
 
     def send_next_candidate(self, user_id):
+        """Показывает следующего кандидата из списка."""
         state = self.db.load_user_state(user_id)
         if not state or "candidates" not in state:
             self.send_message(
@@ -156,6 +160,7 @@ class UserBot:
         self.db.save_user_state(user_id, state)
 
     def add_to_favorites(self, user_id):
+        """Добавляет текущего кандидата в избранное."""
         state = self.db.load_user_state(user_id)
         if not state or "candidates" not in state or state["index"] == 0:
             self.send_message(user_id, "Сначала посмотрите кандидата.")
@@ -180,6 +185,7 @@ class UserBot:
             self.send_message(user_id, "Этот кандидат уже в избранном.")
 
     def show_favorites(self, user_id):
+        """Отправляет пользователю всех кандидатов из избранного."""
         favorites = self.db.get_favorites(user_vk_id=user_id)
         if not favorites:
             self.send_message(user_id, "Ваш список избранного пуст.")
