@@ -1,21 +1,18 @@
 import json
-from typing import List, Optional
 
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from database.models import Base, User, Candidate, Favorite
+from database.models import Base, Candidate, Favorite, User
 
 
 class DatabaseManager:
-
-    def __init__(self, db_url: str):
-        from sqlalchemy import create_engine
+    def __init__(self, db_url):
         self.engine = create_engine(db_url)
         self.Session = sessionmaker(bind=self.engine)
-        Base.metadata.create_all(self.engine)  # создаём таблицы
+        Base.metadata.create_all(self.engine)
 
-    def get_or_create_user(self, vk_id: int) -> User:
-        """Получить или создать пользователя"""
+    def get_or_create_user(self, vk_id):
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=vk_id).first()
             if not user:
@@ -25,26 +22,21 @@ class DatabaseManager:
                 session.refresh(user)
             return user
 
-    def save_user_state(self, vk_id: int, state: dict):
-        """Сохранить состояние пользователя (шаг, возраст и т.п.)"""
+    def save_user_state(self, vk_id, state):
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=vk_id).first()
             if user:
                 user.state = json.dumps(state, ensure_ascii=False)
                 session.commit()
 
-    def load_user_state(self, vk_id: int) -> Optional[dict]:
-        """Загрузить состояние пользователя"""
+    def load_user_state(self, vk_id):
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=vk_id).first()
             if user and user.state:
                 return json.loads(user.state)
             return None
 
-    def get_or_create_candidate(self, vk_id: int, first_name: str,
-                                last_name: str, profile_url: str,
-                                photos: List[str]):
-        """Получить или создать кандидата"""
+    def get_or_create_candidate(self, vk_id, first_name, last_name, profile_url, photos):
         with self.Session() as session:
             candidate = session.query(Candidate).filter_by(vk_id=vk_id).first()
             if not candidate:
@@ -60,16 +52,12 @@ class DatabaseManager:
                 session.refresh(candidate)
             return candidate
 
-    def add_to_favorites(self, user_vk_id: int, candidate_vk_id: int,
-                         first_name: str, last_name: str, profile_url: str,
-                         photos: List[str]) -> bool:
-        """Добавить кандидата в избранное"""
+    def add_to_favorites(self, user_vk_id, candidate_vk_id, first_name, last_name, profile_url, photos):
         user = self.get_or_create_user(user_vk_id)
         candidate = self.get_or_create_candidate(
             candidate_vk_id, first_name, last_name, profile_url, photos
         )
 
-        # Проверим, нет ли уже в избранном
         with self.Session() as session:
             exists = session.query(Favorite).filter_by(
                 user_id=user.id, candidate_id=candidate.id
@@ -82,8 +70,7 @@ class DatabaseManager:
             session.commit()
             return True
 
-    def get_favorites(self, user_vk_id: int) -> List[dict]:
-        """Получить избранных кандидатов"""
+    def get_favorites(self, user_vk_id):
         with self.Session() as session:
             user = session.query(User).filter_by(vk_id=user_vk_id).first()
             if not user:
