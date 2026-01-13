@@ -122,7 +122,7 @@ class UserBot:
         if idx >= len(candidates):
             self.send_message(
                 user_id,
-                "Кандидаты закончились. Что дальше?",
+                "Кандидаты закончились. Начните новый поиск.",
                 keyboard=get_action_buttons(),
             )
             return
