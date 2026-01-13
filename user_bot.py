@@ -1,5 +1,5 @@
-import logging
 from vk_api.utils import get_random_id
+
 from keyboard import get_action_buttons, get_sex_keyboard
 
 
@@ -66,7 +66,13 @@ class UserBot:
                 )
 
         elif step == "wait_city":
-            city_title = text
+            city_title = text.strip()
+
+            # Проверяем, что текст не пуст и содержит хотя бы один буквенный символ
+            if not city_title or not any(c.isalpha() for c in city_title):
+                self.send_message(user_id, "Введите корректное название города (например: Москва).")
+                return
+
             city_id = self.searcher.get_city_id(city_title)
             if not city_id:
                 self.send_message(user_id, "Город не найден. Попробуйте ещё раз.")
