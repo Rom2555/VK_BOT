@@ -33,7 +33,7 @@
 ## Структура проекта
 
 ```
-VKi_Bot/
+VK_Bot/
 ├── database/
 │   ├── __init__.py
 │   ├── manager.py
