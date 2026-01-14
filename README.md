@@ -33,7 +33,7 @@
 ## Структура проекта
 
 ```
-VKinder/
+VKi_Bot/
 ├── database/
 │   ├── __init__.py
 │   ├── manager.py
