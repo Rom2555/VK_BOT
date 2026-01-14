@@ -4,10 +4,10 @@ import time
 from vk_api import VkApi, VkApiError
 from vk_api.longpoll import VkEventType, VkLongPoll
 
-from config import GROUP_TOKEN, USER_TOKEN, DATABASE_URL
+from config import DATABASE_URL, GROUP_TOKEN, USER_TOKEN
+from database.manager import DatabaseManager
 from user_bot import UserBot
 from vk_searcher import VkSearcher
-from database.manager import DatabaseManager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 

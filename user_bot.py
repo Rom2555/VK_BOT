@@ -73,7 +73,9 @@ class UserBot:
 
             # Проверяем, что текст не пуст и содержит хотя бы один буквенный символ
             if not city_title or not any(c.isalpha() for c in city_title):
-                self.send_message(user_id, "Введите корректное название города (например: Москва).")
+                self.send_message(
+                    user_id, "Введите корректное название города (например: Москва)."
+                )
                 return
 
             city_id = self.searcher.get_city_id(city_title)
@@ -91,8 +93,8 @@ class UserBot:
                 else:
                     # Фильтруем: убираем тех, кто уже в избранном
                     favorites = self.db.get_favorites(user_vk_id=user_id)
-                    favorite_ids = {fav['vk_id'] for fav in favorites}
-                    filtered = [c for c in candidates if c['id'] not in favorite_ids]
+                    favorite_ids = {fav["vk_id"] for fav in favorites}
+                    filtered = [c for c in candidates if c["id"] not in favorite_ids]
 
                     if not filtered:
                         self.send_message(user_id, "Нет новых кандидатов.")
@@ -152,7 +154,7 @@ class UserBot:
             first_name=person["first_name"],
             last_name=person["last_name"],
             profile_url=link,
-            photos=photos
+            photos=photos,
         )
 
         # Обновляем индекс
@@ -176,7 +178,7 @@ class UserBot:
             first_name=person["first_name"],
             last_name=person["last_name"],
             profile_url=f"vk.com/id{person['id']}",
-            photos=photos
+            photos=photos,
         )
 
         if success:
@@ -193,10 +195,12 @@ class UserBot:
 
         for fav in favorites:
             name = f"{fav['first_name']} {fav['last_name']}"
-            link = fav['profile_url']
+            link = fav["profile_url"]
             message = f"{name}\nСсылка: {link}"
-            attachment = ",".join(fav['photos']) if fav['photos'] else None
+            attachment = ",".join(fav["photos"]) if fav["photos"] else None
 
             self.send_message(user_id, message, attachment=attachment)
 
-        self.send_message(user_id, "Это всё из вашего избранного.", keyboard=get_action_buttons())
+        self.send_message(
+            user_id, "Это всё из вашего избранного.", keyboard=get_action_buttons()
+        )

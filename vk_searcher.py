@@ -30,7 +30,8 @@ class VkSearcher:
             return None
 
     def search_users(self, age_from, age_to, sex, city_id, offset=0):
-        """Ищет пользователей по возрасту, полу и городу, возвращает открытые профили."""
+        """Ищет пользователей по возрасту, полу и городу.
+        Возвращает список пользователей, к которым доступ открыт."""
         try:
             response = self.api.users.search(
                 age_from=age_from,
